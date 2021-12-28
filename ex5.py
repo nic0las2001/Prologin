@@ -40,7 +40,7 @@ def path_func(signaux,start,finish,fils,blacklist):
             return signal_strength,found
         else:
             for connection in fils[start]:
-                if connection not in blacklist:
+                if connection not in blacklist and len(fils[connection]) > 1:
                     output,found = path_func(signaux,connection,finish,fils,blacklist)
                     if found == True:
                         signal_strength *= output
@@ -50,7 +50,7 @@ def path_func(signaux,start,finish,fils,blacklist):
         return signal_strength, found
     return 1, found
 
-def dict_format(signaux,start,finish,fils,blacklist):
+''''def dict_format(signaux,start,finish,fils,blacklist):
         new_fils = dict(fils)
         delete_list=[]
         for entry in fils:
@@ -66,11 +66,11 @@ def dict_format(signaux,start,finish,fils,blacklist):
             new_fils[entry] = list(temp)
 
         signal_strength,found = path_func(signaux,question[0],question[1],new_fils,blacklist)
-        return signal_strength,found
+        return signal_strength,found'''
 
 for question in questions:
     blacklist = []
-    signal_strength,found = dict_format(signaux,question[0],question[1],fils,blacklist)
+    signal_strength,found = path_func(signaux,question[0],question[1],fils,blacklist)
     while signal_strength > 1671404011:
         signal_strength = signal_strength % 1671404011
     print(signal_strength)
