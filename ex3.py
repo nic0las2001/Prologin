@@ -1,3 +1,5 @@
+from sys import exit
+
 target = int(input(''))
 list_length = int(input(''))
 main_list_string = input('')
@@ -5,106 +7,75 @@ main_list_string = input('')
 #Convert list input into numeric sequence
 main_list_text = main_list_string.split()
 
-main_list = []
-for item in main_list_text:
-    main_list.append(int(item))
-
-'''if list_length != len(main_list):
-    print("IMPOSSIBLE")
-    exit()'''
+main_list = [int(item) for item in main_list_text]
 
 #Diviseurs de target
-multiples_list = []
 other_sign_multiples = []
-if target > 0:
-    for i in range(1, target+1):
-        if target % i == 0:
-            multiples_list.append(i)
-            other_sign_multiples = [-item for item in multiples_list]
-elif target < 0:
-    for i in range(target-1,-1):
-        if target % i == 0:
-            multiples_list.append(i)
-            other_sign_multiples = [-item for item in multiples_list]
-multiples_list.extend(other_sign_multiples)
+bounds = [-target,target]
+bounds.sort()
 
+multiples_list = [i for i in range(bounds[0]-1, bounds[1]+1) if (i != 0) and (target % i == 0)]
 
-#Découpage des listes
-possible_lists = []
-for i_global in range(0,len(main_list)):
-    list_one = []
-    for i in range(i_global,len(main_list)):
-        list_one.append(main_list[i])
-        if (sum(list_one) in multiples_list) and target != 0:
-            possible_lists.insert(len(possible_lists),list(list_one))
-        elif target == 0:
-            possible_lists.insert(len(possible_lists),list(list_one))
-
-#Classement des listes / suppression des plus courtes
-val_dict = {}
-for item in possible_lists:
-    if sum(item) in val_dict:
-        if len(val_dict[sum(item)]) < len(item):
-            val_dict[sum(item)] = item
-    else:
-        val_dict[sum(item)] = item
-
-possible_combinations = []
-blacklist = []
-#target = 0 case:
-if target == 0:
-    if 0 in val_dict:
-        for subitem in val_dict:
-            new_element = [list(val_dict[0]),list(val_dict[subitem])]
-            new_element.sort()
-            possible_combinations.append(new_element)
-    else:
-        print('IMPOSSIBLE')
-        exit()
-else:
-#Pair lists together
-    for item in val_dict:
-        if (round(target/item) in val_dict) and (item not in blacklist):
-            blacklist.append(round(target/item))
-            new_element = [list(val_dict[item]),list(val_dict[round(target/item)])]
-            new_element.sort()
-            possible_combinations.append(new_element)
-
-#Check list isn't empty
-if possible_combinations == []:
-    print('IMPOSSIBLE')
-else:
-    #Work out best combination
-    highest_length = 0
-    for sublist in possible_combinations:
-        length_combination = len(sublist[0]) + len(sublist[1])
-        if length_combination > highest_length:
-            highest_length = length_combination
-            top_combination = sublist
-        elif length_combination == highest_length:
-            sum_combination = sum(sublist[0]) + sum(sublist[1])
-            sum_highest = sum(top_combination[0]) + sum(top_combination[1])
-            if sum_combination >= sum_highest:
-                highest_length = length_combination
-                top_combination = sublist
-
-    #Work out lists print order
+def sort_func(values):
     top_combination_str = ['','']
     for i in range(0,2):
-        top_combination_str[i] = [str(item) for item in top_combination[i]]
+        top_combination_str[i] = [str(item) for item in values[i]]
 
     list_a = ' '.join(top_combination_str[0])
     list_b = ' '.join(top_combination_str[1])
-    if len(top_combination[0]) >  len(top_combination[1]):
+    if len(values[0]) >  len(values[1]):
         print(list_a)
         print(list_b)
-    elif len(top_combination[0]) < len(top_combination[1]):
+    elif len(values[0]) < len(values[1]):
         print(list_b)
         print(list_a)
     else:
-        if sum(top_combination[0]) >=  sum(top_combination[1]):
+        if sum(values[0]) >=  sum(values[1]):
             print(list_a)
             print(list_b)
         else:
             print(list_b)
             print(list_a)
+    exit()
+
+#Iteration des listes
+new_list = [list(main_list)]
+if target != 0:
+    lengths = {} #{sum:length}
+    sums = {} #{sum:[list]}
+    matches = {}
+    for i_global in range(0,len(main_list)):
+        for element in new_list:
+            if sum(element) in multiples_list:
+                sums[sum(element)] = list(element)
+                lengths[sum(element)] = len(element)
+                if target/sum(element) in sums:
+                    matches[lengths[sum(element)] + lengths[target/sum(element)]] = [element,sums[target/sum(element)]]
+        for value in matches:
+            if value >= max(lengths.values()) + len(new_list[0]):
+                    sort_func(matches[value])
+        old_list = list(new_list)
+        new_list = [list(old_list[i][0:len(main_list)-i_global-1]) for i in range(0,len(old_list))]
+        new_list.append(list(old_list[len(old_list)-1][1:len(main_list)-i_global]))
+    pairs = []
+    top = [0,[]]
+    for value in matches:
+        if value >= max(lengths.values()) + len(new_list[0]):
+            pairs.append(matches[value])
+    if len(pairs) > 0:
+        for i in range(0,len(pairs)):
+            leng = len(pairs[i][0]) + len(pairs[i][1])
+            if leng > top[0]:
+                top[0] = leng
+                top[1] = pairs[i]
+        sort_func(top[1])
+else:
+    for i_global in range(0,len(main_list)):
+        for element in new_list:
+            if sum(element) == 0:
+                sort_func([main_list,element])
+        old_list = list(new_list)
+        new_list = [list(old_list[i][0:len(main_list)-i_global-1]) for i in range(0,len(old_list))]
+        new_list.append(list(old_list[len(old_list)-1][1:len(main_list)-i_global]))
+
+print('IMPOSSIBLE')
